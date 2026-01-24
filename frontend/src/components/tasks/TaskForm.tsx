@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTasks } from '../../lib/api/task-context';
+import { useTasks } from '../../app/lib/api/task-context';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';

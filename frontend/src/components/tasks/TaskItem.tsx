@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Task } from '../../lib/types';
-import { useTasks } from '../../lib/api/task-context';
+import { Task } from '../../app/lib/types';
+import { useTasks } from '../../app/lib/api/task-context';
 import { FiEdit2, FiTrash2, FiSave, FiX } from 'react-icons/fi';
 
 interface TaskItemProps {

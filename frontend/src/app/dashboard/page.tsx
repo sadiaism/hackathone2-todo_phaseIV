@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useContext } from 'react';
-import { useAuth } from '../../lib/auth/auth-context';
-import { TaskProvider, TaskContext } from '../../lib/api/task-context';
+import { useAuth } from '../lib/auth/auth-context';
+import { TaskProvider, TaskContext } from '../lib/api/task-context';
 import Header from '../../components/ui/Header';
 import TaskForm from '../../components/tasks/TaskForm';
 import TaskList from '../../components/tasks/TaskList';

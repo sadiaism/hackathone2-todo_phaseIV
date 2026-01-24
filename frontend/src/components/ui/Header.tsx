@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useAuth } from '@/app/lib/auth/auth-context';
 import Button from './Button';
 
 const Header: React.FC = () => {
