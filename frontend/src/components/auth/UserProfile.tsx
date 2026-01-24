@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useAuth } from '../../lib/auth/auth-context';
 import Card from '../ui/Card';
 
 const UserProfile: React.FC = () => {
