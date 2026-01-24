@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useTasks } from '../../lib/api/task-context';
 import Input from '../ui/Input';
+import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 
 const TaskForm: React.FC = () => {
@@ -47,9 +48,8 @@ const TaskForm: React.FC = () => {
           required
         />
 
-        <Input
+        <Textarea
           label="Description (Optional)"
-          as="textarea"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Add details..."

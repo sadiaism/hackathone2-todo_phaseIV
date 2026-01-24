@@ -27,7 +27,7 @@ const UserProfile: React.FC = () => {
         </div>
         <div>
           <label className="text-sm font-medium text-gray-500">Member Since</label>
-          <p className="text-gray-900">{new Date(currentUser.createdAt).toLocaleDateString()}</p>
+          <p className="text-gray-900">{currentUser.createdAt ? new Date(currentUser.createdAt).toLocaleDateString() : 'N/A'}</p>
         </div>
       </div>
     </Card>

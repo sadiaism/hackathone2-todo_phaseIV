@@ -51,7 +51,7 @@ const DashboardPage: React.FC = () => {
               </div>
               <div className="mt-4 sm:mt-0">
                 <p className="text-sm text-gray-500">
-                  {state.currentUser?.username}'s dashboard
+                  {state.currentUser?.username}&apos;s dashboard
                 </p>
               </div>
             </div>
