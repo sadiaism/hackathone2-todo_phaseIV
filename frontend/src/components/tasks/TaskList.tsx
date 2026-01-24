@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTasks } from '../../lib/api/task-context';
+import { useTasks } from '@/lib/api/task-context';
 import TaskItem from './TaskItem';
 import Card from '../ui/Card';
 
