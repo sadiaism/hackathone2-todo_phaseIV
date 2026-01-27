@@ -14,16 +14,14 @@ const Card: React.FC<CardProps> = ({
   description
 }) => {
   return (
-    <div className={`rounded-xl border bg-card text-card-foreground shadow ${className}`}>
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${className}`}>
       {(title || description) && (
-        <div className="p-6 pb-0">
-          {title && <h3 className="font-semibold leading-none tracking-tight">{title}</h3>}
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+        <div className="mb-4">
+          {title && <h3 className="text-xl font-semibold text-gray-900 mb-1">{title}</h3>}
+          {description && <p className="text-gray-600 text-sm">{description}</p>}
         </div>
       )}
-      <div className={`p-6 ${title || description ? '' : 'pt-0'}`}>
-        {children}
-      </div>
+      {children}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   fullWidth?: boolean;
@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button: React.FC<ButtonProps> = ({
   children,
-  variant = 'primary',
+  variant = 'default',
   size = 'md',
   loading = false,
   fullWidth = false,
@@ -18,36 +18,42 @@ const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   // Base classes
-  let baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background';
+  let baseClasses = 'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background shadow-sm hover:shadow-md';
 
   // Variant classes
   switch (variant) {
-    case 'primary':
-      baseClasses += ' bg-blue-600 text-white hover:bg-blue-700';
+    case 'default':
+      baseClasses += ' bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 hover:shadow-lg active:transform active:scale-95';
+      break;
+    case 'destructive':
+      baseClasses += ' bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-lg active:transform active:scale-95';
+      break;
+    case 'outline':
+      baseClasses += ' border-2 border-gray-300 bg-white text-gray-900 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:transform active:scale-95';
       break;
     case 'secondary':
-      baseClasses += ' bg-gray-200 text-gray-800 hover:bg-gray-300';
-      break;
-    case 'danger':
-      baseClasses += ' bg-red-600 text-white hover:bg-red-700';
+      baseClasses += ' bg-gradient-to-r from-gray-100 to-gray-200 text-gray-900 hover:from-gray-200 hover:to-gray-300 hover:shadow-md active:transform active:scale-95';
       break;
     case 'ghost':
-      baseClasses += ' bg-transparent text-gray-700 hover:bg-gray-100';
+      baseClasses += ' text-gray-700 hover:bg-gray-100 hover:text-gray-900 hover:shadow-sm active:transform active:scale-95';
+      break;
+    case 'link':
+      baseClasses += ' text-blue-600 underline-offset-4 hover:underline hover:text-blue-700';
       break;
     default:
-      baseClasses += ' bg-blue-600 text-white hover:bg-blue-700';
+      baseClasses += ' bg-gradient-to-r from-blue-600 to-indigo-700 text-white hover:from-blue-700 hover:to-indigo-800 hover:shadow-lg active:transform active:scale-95';
   }
 
   // Size classes
   switch (size) {
     case 'sm':
-      baseClasses += ' h-9 px-3 text-sm';
+      baseClasses += ' h-9 px-4 text-sm';
       break;
     case 'lg':
-      baseClasses += ' h-11 px-6 text-lg';
+      baseClasses += ' h-12 px-8 text-base';
       break;
     default: // md
-      baseClasses += ' h-10 px-4 py-2';
+      baseClasses += ' h-10 px-6 text-sm';
   }
 
   // Width class
