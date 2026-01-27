@@ -84,7 +84,7 @@ const TaskForm: React.FC = () => {
         <Button
           type="submit"
           loading={loading}
-          variant="primary"
+          variant="default"
           className="w-full py-3 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
         >
           Add Task
