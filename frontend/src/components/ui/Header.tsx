@@ -3,10 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/app/lib/auth/auth-context';
+import { useRouter } from 'next/navigation';
 import Button from './Button';
 
 const Header: React.FC = () => {
   const { state, logout } = useAuth();
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/40 backdrop-blur-xl border-b border-white/30 shadow-lg shadow-indigo-100/30">
@@ -29,12 +31,23 @@ const Header: React.FC = () => {
 
             <nav className="hidden md:ml-16 md:flex md:space-x-2">
               {state.isAuthenticated ? (
-                <Link
-                  href="/dashboard"
-                  className="px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-indigo-50/50 hover:text-indigo-700 text-indigo-700/80 hover:scale-105"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-indigo-50/50 hover:text-indigo-700 text-indigo-700/80 hover:scale-105"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => router.push('/chat')}
+                    className="px-5 py-3 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-indigo-50/50 hover:text-indigo-700 text-indigo-700/80 hover:scale-105 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
+                    </svg>
+                    <span className="sr-only">AI Chat</span>
+                  </button>
+                </>
               ) : (
                 <>
                   <Link

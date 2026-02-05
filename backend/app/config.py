@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     neon_db_user: Optional[str] = None
     neon_db_password: Optional[str] = None
     neon_db_port: Optional[int] = 5432
+    gemini_api_key: Optional[str] = None
 
     # JWT Configuration
     BETTER_AUTH_SECRET: str

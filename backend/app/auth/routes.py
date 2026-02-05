@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from typing import Optional
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
-from app.config import settings
-from app.database import get_session
-from app.auth.models import TokenData
-from app.user_models import User
-from app import crud
-from app.auth.dependencies import require_auth
+from ..config import settings
+from ..database import get_session
+from .models import TokenData
+from ..user_models import User
+from .. import crud
+from .dependencies import require_auth
 
 
 # Define Pydantic models for authentication
@@ -73,7 +73,7 @@ def register_user(
     token_data = {
         "sub": str(user.id),  # JWT sub field must be string
         "email": user.email,
-        "exp": datetime.utcnow() + timedelta(seconds=settings.JWT_EXPIRATION_DELTA)
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_EXPIRATION_DELTA)
     }
     token = jwt.encode(token_data, settings.BETTER_AUTH_SECRET, algorithm=settings.JWT_ALGORITHM)
 
@@ -116,7 +116,7 @@ def login_user(
     token_data = {
         "sub": str(user.id),  # JWT sub field must be string
         "email": user.email,
-        "exp": datetime.utcnow() + timedelta(seconds=settings.JWT_EXPIRATION_DELTA)
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=settings.JWT_EXPIRATION_DELTA)
     }
     token = jwt.encode(token_data, settings.BETTER_AUTH_SECRET, algorithm=settings.JWT_ALGORITHM)
 

@@ -24,3 +24,4 @@ class TaskUpdate(SQLModel):
 
 class TaskComplete(SQLModel):
     completed: bool
+

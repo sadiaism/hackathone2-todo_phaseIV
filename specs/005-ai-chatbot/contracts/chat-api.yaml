@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Todo AI Chatbot API
+  description: Stateless chat API for Todo AI Chatbot with persistent memory
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+    description: Production server
+  - url: https://staging-api.example.com
+    description: Staging server
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Process a chat message and return AI response
+      description: |
+        Stateless endpoint that processes a user's chat message, reconstructs conversation context,
+        executes AI agent with MCP tools, and returns the response. The conversation state is
+        managed through database persistence rather than server-side sessions.
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the user making the request (from JWT token)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response from AI agent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - user attempting to access another user's data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - conversation_id
+      properties:
+        message:
+          type: string
+          description: The user's message to the AI chatbot
+          example: "What are my tasks for today?"
+        conversation_id:
+          type: string
+          format: uuid
+          description: The ID of the conversation thread
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        metadata:
+          type: object
+          description: Additional metadata for the message
+          additionalProperties: true
+
+    ChatResponse:
+      type: object
+      required:
+        - response
+        - conversation_id
+        - timestamp
+      properties:
+        response:
+          type: string
+          description: The AI-generated response
+          example: "You have 3 tasks today: Meeting with John at 10 AM, Grocery shopping, Call Sarah"
+        conversation_id:
+          type: string
+          format: uuid
+          description: The ID of the conversation thread
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        tool_calls:
+          type: array
+          description: List of MCP tool calls executed during the response
+          items:
+            $ref: '#/components/schemas/ToolCallResult'
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+          example: "2023-10-20T10:30:00Z"
+
+    ToolCallResult:
+      type: object
+      required:
+        - tool_name
+        - parameters
+        - result
+        - status
+      properties:
+        tool_name:
+          type: string
+          description: Name of the MCP tool that was called
+          example: "todo_create_tool"
+        parameters:
+          type: object
+          description: Parameters passed to the tool
+          additionalProperties: true
+        result:
+          type: object
+          description: Result returned by the tool
+          additionalProperties: true
+        status:
+          type: string
+          enum: [success, failed]
+          description: Status of the tool call
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "AUTH_001"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid JWT token provided"
+
+security:
+  - bearerAuth: []

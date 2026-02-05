@@ -5,6 +5,7 @@ This can be run separately to ensure tables are created in the database.
 from .database import engine, create_db_and_tables
 from .models import Task
 from .user_models import User
+# # from .conversation_models import Conversation, ChatMessage  # Temporarily commented out due to relationship issues  # Temporarily commented out due to relationship issues
 
 
 def init_db():

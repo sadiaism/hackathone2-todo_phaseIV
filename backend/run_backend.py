@@ -29,8 +29,8 @@ def main():
         print(f"Using configured database: {db_url}")
 
     print("\nStarting backend server...")
-    print("Access the API at: http://127.0.0.1:8001")
-    print("API documentation at: http://127.0.0.1:8001/docs")
+    print("Access the API at: http://127.0.0.1:8000")
+    print("API documentation at: http://127.0.0.1:8000/docs")
     print("Use Ctrl+C to stop the server\n")
 
     # Import and run uvicorn

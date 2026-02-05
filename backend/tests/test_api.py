@@ -51,7 +51,7 @@ def client_fixture(session: Session):
 def test_create_task(client: TestClient):
     # Test creating a task
     response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert response.status_code == 201
@@ -68,13 +68,13 @@ def test_create_task(client: TestClient):
 def test_get_tasks_for_user(client: TestClient):
     # Create a task first
     response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert response.status_code == 201
 
     # Get tasks for user
-    response = client.get("/api/1/tasks")
+    response = client.get("/api/users/1/tasks")
     assert response.status_code == 200
     data = response.json()
     assert len(data["tasks"]) == 1
@@ -84,14 +84,14 @@ def test_get_tasks_for_user(client: TestClient):
 def test_get_specific_task(client: TestClient):
     # Create a task first
     create_response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert create_response.status_code == 201
     task_id = create_response.json()["id"]
 
     # Get the specific task
-    response = client.get(f"/api/1/tasks/{task_id}")
+    response = client.get(f"/api/users/1/tasks/{task_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["title"] == "Test Task"
@@ -100,7 +100,7 @@ def test_get_specific_task(client: TestClient):
 def test_update_task(client: TestClient):
     # Create a task first
     create_response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert create_response.status_code == 201
@@ -108,7 +108,7 @@ def test_update_task(client: TestClient):
 
     # Update the task
     response = client.put(
-        f"/api/1/tasks/{task_id}",
+        f"/api/users/1/tasks/{task_id}",
         json={"title": "Updated Task", "completed": True}
     )
     assert response.status_code == 200
@@ -120,7 +120,7 @@ def test_update_task(client: TestClient):
 def test_complete_task(client: TestClient):
     # Create a task first
     create_response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert create_response.status_code == 201
@@ -128,7 +128,7 @@ def test_complete_task(client: TestClient):
 
     # Update the task completion status
     response = client.patch(
-        f"/api/1/tasks/{task_id}/complete",
+        f"/api/users/1/tasks/{task_id}/complete",
         json={"completed": True}
     )
     assert response.status_code == 200
@@ -139,16 +139,16 @@ def test_complete_task(client: TestClient):
 def test_delete_task(client: TestClient):
     # Create a task first
     create_response = client.post(
-        "/api/1/tasks",
+        "/api/users/1/tasks",
         json={"title": "Test Task", "description": "Test Description"}
     )
     assert create_response.status_code == 201
     task_id = create_response.json()["id"]
 
     # Delete the task
-    response = client.delete(f"/api/1/tasks/{task_id}")
+    response = client.delete(f"/api/users/1/tasks/{task_id}")
     assert response.status_code == 204
 
     # Verify the task is gone
-    response = client.get(f"/api/1/tasks/{task_id}")
+    response = client.get(f"/api/users/1/tasks/{task_id}")
     assert response.status_code == 404

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 import jwt
 from fastapi import HTTPException, status, Request
-from app.config import settings
+from ..config import settings
 from .models import TokenData
 
 

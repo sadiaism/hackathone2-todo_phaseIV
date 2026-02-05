@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useContext } from 'react';
+import Link from 'next/link';
 import { useAuth } from '../lib/auth/auth-context';
 import { TaskProvider, TaskContext } from '../lib/api/task-context';
 import Header from '@/components/ui/Header';
@@ -101,6 +102,22 @@ const DashboardPage: React.FC = () => {
           <div className="mb-6 animate-fade-in">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent mb-1">Welcome back,</h1>
             <p className="text-sm text-blue-700/80">Manage your tasks efficiently and boost your productivity</p>
+
+            {/* AI Chat Assistant Promotion */}
+            <div className="mt-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Try Our AI Assistant!</h3>
+                  <p className="text-indigo-100 text-sm">Chat with our AI to manage your tasks using natural language</p>
+                </div>
+                <button
+                  onClick={() => router.push('/chat')}
+                  className="bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition-colors whitespace-nowrap"
+                >
+                  Open Chat
+                </button>
+              </div>
+            </div>
           </div>
 
           <TaskProvider>

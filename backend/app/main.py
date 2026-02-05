@@ -18,6 +18,8 @@ from .exceptions import TaskNotFoundException
 from .auth.dependencies import require_auth
 from .auth.models import TokenData
 from .auth.routes import auth_router
+from .api.conversation_api import router as conversation_router
+from .api.chat_api import router as chat_router
 
 
 @asynccontextmanager
@@ -38,7 +40,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://127.0.0.1:3000", "http://127.0.0.1:3001"],  # Allow frontend origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +48,12 @@ app.add_middleware(
 
 # Include authentication routes
 app.include_router(auth_router)
+
+# Include conversation routes
+app.include_router(conversation_router, prefix="/api/{user_id}")
+
+# Include chat routes
+app.include_router(chat_router, prefix="/api/{user_id}")
 
 
 @app.get("/")
@@ -60,6 +68,13 @@ def get_tasks(
     session: Session = Depends(get_session)
 ):
     """Get all tasks for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is accessing their own data
     if current_user.user_id != user_id:
         raise HTTPException(
@@ -81,6 +96,13 @@ def create_task(
     session: Session = Depends(get_session)
 ):
     """Create a new task for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is creating for themselves
     if current_user.user_id != user_id:
         raise HTTPException(
@@ -101,6 +123,13 @@ def get_task(
     session: Session = Depends(get_session)
 ):
     """Get a specific task by ID for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is accessing their own data
     if current_user.user_id != user_id:
         raise HTTPException(
@@ -124,6 +153,13 @@ def update_task(
     session: Session = Depends(get_session)
 ):
     """Update a specific task for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is accessing their own data
     if current_user.user_id != user_id:
         raise HTTPException(
@@ -147,6 +183,13 @@ def delete_task(
     session: Session = Depends(get_session)
 ):
     """Delete a specific task for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is accessing their own data
     if current_user.user_id != user_id:
         raise HTTPException(
@@ -169,6 +212,13 @@ def update_task_completion(
     session: Session = Depends(get_session)
 ):
     """Update the completion status of a task for the authenticated user"""
+    # Check if user is authenticated
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+
     # Verify user is accessing their own data
     if current_user.user_id != user_id:
         raise HTTPException(

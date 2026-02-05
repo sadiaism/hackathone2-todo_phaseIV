@@ -159,6 +159,84 @@ Update the completion status of a task for the authenticated user.
 }
 ```
 
+## Chat Endpoints
+
+### POST /api/{user_id}/chat
+Initiates or continues a conversation with the AI assistant.
+
+**Path Parameters:**
+- `user_id` (int): The ID of the user initiating the chat
+
+**Headers:**
+- `Authorization` (required): Bearer token
+
+**Request Body:**
+```json
+{
+  "message": "string, required - The user's message",
+  "conversation_id": "string, optional - Existing conversation ID, creates new if omitted"
+}
+```
+
+**Response:**
+- `200 OK`: Chat response with conversation details
+
+**Example Request:**
+```
+POST /api/123/chat
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "message": "Add a todo to buy groceries",
+  "conversation_id": "456"
+}
+```
+
+**Example Response:**
+```json
+{
+  "conversation_id": "456",
+  "message": "Add a todo to buy groceries",
+  "ai_response": "I've created a task for you: Buy groceries",
+  "timestamp": "2026-02-04T14:30:00.000Z",
+  "todo_action_result": {
+    "action": "create",
+    "todo_id": "789",
+    "todo_title": "Buy groceries"
+  }
+}
+```
+
+### GET /api/{user_id}/chat/{conversation_id}
+Retrieves a specific conversation with its message history.
+
+**Path Parameters:**
+- `user_id` (int): The ID of the user
+- `conversation_id` (string): The ID of the conversation to retrieve
+
+**Headers:**
+- `Authorization` (required): Bearer token
+
+**Response:**
+- `200 OK`: Conversation data with message history
+
+### GET /api/{user_id}/chat
+Retrieves all conversations for the authenticated user.
+
+**Path Parameters:**
+- `user_id` (int): The ID of the user
+
+**Headers:**
+- `Authorization` (required): Bearer token
+
+**Query Parameters:**
+- `limit` (optional): Number of conversations to return (default: 10)
+- `offset` (optional): Number of conversations to skip for pagination (default: 0)
+
+**Response:**
+- `200 OK`: List of user's conversations
+
 ## Security
 
 - All endpoints require valid JWT tokens

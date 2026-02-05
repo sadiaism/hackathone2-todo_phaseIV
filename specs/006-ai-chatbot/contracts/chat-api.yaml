@@ -1,0 +1,399 @@
+openapi: 3.0.0
+info:
+  title: Todo AI Chatbot API
+  description: API for chatbot functionality to manage todos through natural language
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.todoapp.com
+    description: Production server
+
+paths:
+  /api/{user_id}/chat:
+    post:
+      summary: Send a message to the AI chatbot
+      description: Sends a user message to the AI chatbot and returns the AI response
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the authenticated user
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '200':
+          description: Successfully processed the message and returned AI response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMessageResponse'
+        '400':
+          description: Invalid request parameters or message content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - user trying to access another user's chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error during message processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/{user_id}/chat/{conversation_id}:
+    get:
+      summary: Get conversation history
+      description: Retrieves the full history of a specific conversation
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the authenticated user
+          schema:
+            type: string
+        - name: conversation_id
+          in: path
+          required: true
+          description: The ID of the conversation to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved conversation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConversationResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - user trying to access another user's conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Conversation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+  /api/{user_id}/chat:
+    get:
+      summary: Get user's recent conversations
+      description: Retrieves a list of recent conversations for the authenticated user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: The ID of the authenticated user
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of conversations to return (default 10)
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 50
+        - name: offset
+          in: query
+          required: false
+          description: Number of conversations to skip (for pagination)
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Successfully retrieved list of conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetConversationsResponse'
+        '401':
+          description: Unauthorized - invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - user trying to access another user's conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SendMessageRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: The user's message to send to the AI chatbot
+          example: "Add a todo to buy groceries"
+        conversation_id:
+          type: string
+          description: Optional conversation ID to continue an existing conversation
+          example: "conv_abc123"
+
+    SendMessageResponse:
+      type: object
+      required:
+        - conversation_id
+        - message
+        - ai_response
+        - timestamp
+      properties:
+        conversation_id:
+          type: string
+          description: The ID of the conversation
+          example: "conv_abc123"
+        message:
+          type: string
+          description: The original user message
+          example: "Add a todo to buy groceries"
+        ai_response:
+          type: string
+          description: The AI's response to the user's message
+          example: "I've added 'buy groceries' to your todo list. Is there anything else I can help you with?"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+          example: "2023-10-20T10:00:00Z"
+        todo_action_result:
+          type: object
+          description: Result of any todo management action taken by the AI
+          properties:
+            action:
+              type: string
+              description: The action performed
+              enum: [created, updated, deleted, queried, none]
+            todo_id:
+              type: string
+              description: ID of the affected todo (if applicable)
+            todo_title:
+              type: string
+              description: Title of the affected todo (if applicable)
+
+    GetConversationResponse:
+      type: object
+      required:
+        - conversation
+      properties:
+        conversation:
+          $ref: '#/components/schemas/Conversation'
+
+    GetConversationsResponse:
+      type: object
+      required:
+        - conversations
+        - total_count
+      properties:
+        conversations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConversationSummary'
+        total_count:
+          type: integer
+          description: Total number of conversations for the user
+        has_more:
+          type: boolean
+          description: Whether there are more conversations available for pagination
+
+    Conversation:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - created_at
+        - updated_at
+        - status
+        - messages
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the conversation
+          example: "conv_abc123"
+        user_id:
+          type: string
+          description: ID of the user who owns this conversation
+          example: "user_xyz789"
+        title:
+          type: string
+          description: Auto-generated or user-defined title for the conversation
+          example: "Grocery list management"
+        created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+          example: "2023-10-20T09:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the conversation was last updated
+          example: "2023-10-20T10:00:00Z"
+        status:
+          type: string
+          description: Current status of the conversation
+          enum: [active, closed, archived]
+          example: "active"
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+
+    ConversationSummary:
+      type: object
+      required:
+        - id
+        - title
+        - created_at
+        - updated_at
+        - status
+        - message_count
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the conversation
+          example: "conv_abc123"
+        title:
+          type: string
+          description: Auto-generated or user-defined title for the conversation
+          example: "Grocery list management"
+        created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+          example: "2023-10-20T09:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the conversation was last updated
+          example: "2023-10-20T10:00:00Z"
+        status:
+          type: string
+          description: Current status of the conversation
+          enum: [active, closed, archived]
+          example: "active"
+        message_count:
+          type: integer
+          description: Number of messages in the conversation
+          example: 5
+
+    ChatMessage:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - sender_type
+        - content
+        - timestamp
+        - status
+        - message_type
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the message
+          example: "msg_def456"
+        conversation_id:
+          type: string
+          description: ID of the conversation this message belongs to
+          example: "conv_abc123"
+        sender_type:
+          type: string
+          description: Who sent the message
+          enum: [user, ai]
+          example: "user"
+        content:
+          type: string
+          description: The actual message content
+          example: "Add a todo to buy groceries"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent/received
+          example: "2023-10-20T10:00:00Z"
+        status:
+          type: string
+          description: Delivery/processing status of the message
+          enum: [sent, delivered, read, error]
+          example: "delivered"
+        message_type:
+          type: string
+          description: Type of message
+          enum: [text, confirmation, error, system]
+          example: "text"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "INVALID_REQUEST"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Message content is required and cannot be empty"
+        details:
+          type: object
+          description: Additional error details (optional)
+          example: {"field": "message", "reason": "cannot be empty"}

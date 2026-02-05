@@ -1,0 +1,157 @@
+# API Contract: AI Agent Service Endpoints
+
+**Feature**: 004-ai-chatbot-mcp
+**Date**: 2026-02-02
+
+## Overview
+
+This document defines the API contract for the AI agent service endpoints that allow frontend applications to interact with the AI-powered todo management system.
+
+## Base URL
+```
+http://localhost:8000/api/v1/ai-agent
+```
+
+## Authentication
+All endpoints require JWT authentication in the Authorization header:
+```
+Authorization: Bearer {jwt_token}
+```
+
+## Endpoints
+
+### POST /execute-command
+Execute a natural language command through the AI agent
+
+#### Request
+```json
+{
+  "command": "add a task to buy groceries",
+  "context": {
+    "user_timezone": "America/New_York",
+    "preferred_format": "structured"
+  }
+}
+```
+
+#### Response (Success - 200)
+```json
+{
+  "status": "success",
+  "result": {
+    "type": "task_created",
+    "message": "Successfully created task: Buy groceries",
+    "task": {
+      "id": "uuid-string",
+      "title": "Buy groceries",
+      "description": null,
+      "status": "pending",
+      "created_at": "2024-01-15T10:30:00Z",
+      "updated_at": "2024-01-15T10:30:00Z",
+      "user_id": "user-uuid-string",
+      "ai_generated": true,
+      "natural_language_input": "add a task to buy groceries"
+    }
+  },
+  "tool_used": "add_task",
+  "execution_time_ms": 1250
+}
+```
+
+#### Response (Error - 400)
+```json
+{
+  "status": "error",
+  "error_code": "INVALID_COMMAND",
+  "message": "Unable to understand the provided command",
+  "suggestions": [
+    "Try rephrasing your request",
+    "Use commands like 'add task', 'show tasks', 'complete task'"
+  ]
+}
+```
+
+#### Response (Unauthorized - 401)
+```json
+{
+  "status": "error",
+  "error_code": "UNAUTHORIZED",
+  "message": "Invalid or missing authentication token"
+}
+```
+
+### GET /history
+Retrieve recent AI agent interactions for the authenticated user
+
+#### Query Parameters
+- `limit` (optional, default: 10): Number of interactions to return
+- `since` (optional): ISO datetime to filter interactions from
+
+#### Response (Success - 200)
+```json
+{
+  "status": "success",
+  "interactions": [
+    {
+      "id": "interaction-uuid",
+      "input_text": "add a task to buy groceries",
+      "selected_tool": "add_task",
+      "result_status": "success",
+      "result_message": "Successfully created task: Buy groceries",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "execution_time_ms": 1250
+    }
+  ],
+  "total_count": 1
+}
+```
+
+### POST /validate-command
+Validate a natural language command without executing it
+
+#### Request
+```json
+{
+  "command": "add a task to buy groceries"
+}
+```
+
+#### Response (Success - 200)
+```json
+{
+  "status": "success",
+  "validation_result": {
+    "valid": true,
+    "suggested_tool": "add_task",
+    "parsed_intent": "create_todo",
+    "confidence": 0.95,
+    "extracted_parameters": {
+      "title": "buy groceries"
+    }
+  }
+}
+```
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| INVALID_COMMAND | The command could not be understood or mapped to any available tools |
+| UNAUTHORIZED | Missing or invalid authentication token |
+| INSUFFICIENT_PERMISSIONS | User lacks permission for requested operation |
+| TOOL_EXECUTION_ERROR | Error occurred while executing the selected tool |
+| DATABASE_ERROR | Error occurred while persisting changes to the database |
+| RATE_LIMIT_EXCEEDED | Too many requests from the same user |
+
+## Headers
+
+All requests and responses include these headers:
+- `Content-Type: application/json`
+- `X-Request-ID`: Unique identifier for the request
+- `X-Execution-Time`: Time taken to process the request (for successful responses)
+
+## Rate Limiting
+
+Rate limits apply per authenticated user:
+- 100 requests per minute
+- 1000 requests per hour
