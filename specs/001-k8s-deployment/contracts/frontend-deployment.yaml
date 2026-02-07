@@ -1,0 +1,135 @@
+# Frontend Deployment Contract
+
+This file defines the Kubernetes Deployment resource template for the frontend service.
+
+## Resource Specification
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-chatbot.fullname" . }}-frontend
+  labels:
+    app: {{ include "todo-chatbot.name" . }}-frontend
+    chart: {{ include "todo-chatbot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount.frontend }}
+  selector:
+    matchLabels:
+      app: {{ include "todo-chatbot.name" . }}-frontend
+      release: {{ .Release.Name }}
+  strategy:
+    type: {{ .Values.updateStrategy.type }}
+    {{- if eq .Values.updateStrategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.updateStrategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.updateStrategy.rollingUpdate.maxUnavailable }}
+    {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "todo-chatbot.name" . }}-frontend
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.image.frontend.repository }}:{{ .Values.image.frontend.tag }}"
+        imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.frontend.targetPort }}
+          protocol: TCP
+        env:
+        - name: NEXT_PUBLIC_BACKEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "todo-chatbot.fullname" . }}-config
+              key: BACKEND_URL
+        - name: NODE_ENV
+          value: {{ .Values.env.frontend.NODE_ENV | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.env.frontend.LOG_LEVEL | quote }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.frontend.livenessProbe.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.frontend.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.frontend.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.frontend.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.frontend.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.frontend.readinessProbe.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.frontend.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.frontend.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.frontend.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.frontend.readinessProbe.failureThreshold }}
+        resources:
+          requests:
+            cpu: {{ .Values.resources.frontend.requests.cpu }}
+            memory: {{ .Values.resources.frontend.requests.memory }}
+          limits:
+            cpu: {{ .Values.resources.frontend.limits.cpu }}
+            memory: {{ .Values.resources.frontend.limits.memory }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+```
+
+## Key Features
+
+### Replica Management
+- Configurable replica count via `replicaCount.frontend`
+- Supports horizontal scaling
+- Label selector ensures pods are properly managed
+
+### Update Strategy
+- Supports RollingUpdate (default) and Recreate strategies
+- RollingUpdate ensures zero-downtime deployments
+- Configurable maxSurge and maxUnavailable
+
+### Container Configuration
+- Image pulled from configurable repository and tag
+- Exposes port 3000 (Next.js default)
+- Environment variables from ConfigMap and direct values
+
+### Health Checks
+- **Liveness Probe**: Ensures container is alive, restarts if failing
+- **Readiness Probe**: Ensures container is ready to serve traffic
+- Both use HTTP GET requests to health endpoints
+
+### Resource Management
+- CPU and memory requests for scheduling
+- CPU and memory limits to prevent resource exhaustion
+- Configurable via values.yaml
+
+### Security
+- Runs as non-root user (UID 1000)
+- Privilege escalation disabled
+- Follows container security best practices
+
+## Dependencies
+
+- ConfigMap: `{{ include "todo-chatbot.fullname" . }}-config`
+- Service: `{{ include "todo-chatbot.fullname" . }}-frontend`
+
+## Validation
+
+The deployment is valid when:
+1. All replicas reach Running state
+2. Health checks pass for all pods
+3. Pods are selected by the frontend service
+4. Environment variables are properly injected
+
+## Troubleshooting
+
+Common issues:
+- **ImagePullBackOff**: Image not found in registry
+- **CrashLoopBackOff**: Container failing to start, check logs
+- **Pods not ready**: Health checks failing, verify endpoints
+- **Resource constraints**: Insufficient cluster resources

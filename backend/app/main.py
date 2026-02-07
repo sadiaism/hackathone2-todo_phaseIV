@@ -20,6 +20,7 @@ from .auth.models import TokenData
 from .auth.routes import auth_router
 from .api.conversation_api import router as conversation_router
 from .api.chat_api import router as chat_router
+from .api.health import router as health_router
 
 
 @asynccontextmanager
@@ -48,6 +49,9 @@ app.add_middleware(
 
 # Include authentication routes
 app.include_router(auth_router)
+
+# Include health check routes (no prefix for root-level health endpoints)
+app.include_router(health_router)
 
 # Include conversation routes
 app.include_router(conversation_router, prefix="/api/{user_id}")
