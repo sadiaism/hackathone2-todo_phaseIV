@@ -26,6 +26,10 @@ spec:
         env:
         - name: NEXT_PUBLIC_BACKEND_URL
           value: {{ .Values.env.frontend.NEXT_PUBLIC_BACKEND_URL | quote }}
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: {{ .Values.env.frontend.NEXT_PUBLIC_API_BASE_URL | quote }}
+        - name: NEXT_PUBLIC_API_URL
+          value: {{ .Values.env.frontend.NEXT_PUBLIC_API_URL | quote }}
         - name: NODE_ENV
           value: "production"
         livenessProbe:

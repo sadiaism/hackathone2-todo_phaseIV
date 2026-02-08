@@ -24,9 +24,10 @@ service:
     targetPort: 3000
     nodePort: 30080
   backend:
-    type: ClusterIP
+    type: NodePort
     port: 8000
     targetPort: 8000
+    nodePort: 30081
 
 # Resource limits and requests
 resources:
@@ -87,7 +88,9 @@ env:
   backend:
     BACKEND_URL: "http://todo-chatbot-backend:8000"
   frontend:
-    NEXT_PUBLIC_BACKEND_URL: "http://todo-chatbot-backend:8000"
+    NEXT_PUBLIC_BACKEND_URL: "http://192.168.49.2:30081"
+    NEXT_PUBLIC_API_BASE_URL: "http://192.168.49.2:30081"
+    NEXT_PUBLIC_API_URL: "http://192.168.49.2:30081"
 
 # Secrets (reference to Kubernetes secret)
 secrets:
