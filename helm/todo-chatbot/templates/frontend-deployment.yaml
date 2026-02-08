@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-frontend
+  labels:
+    app: {{ .Chart.Name }}-frontend
+    version: {{ .Chart.AppVersion }}
+spec:
+  replicas: {{ .Values.replicaCount.frontend }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-frontend
+        version: {{ .Chart.AppVersion }}
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.image.frontend.repository }}:{{ .Values.image.frontend.tag }}"
+        imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.service.frontend.targetPort }}
+          name: http
+        env:
+        - name: NEXT_PUBLIC_BACKEND_URL
+          value: {{ .Values.env.frontend.NEXT_PUBLIC_BACKEND_URL | quote }}
+        - name: NODE_ENV
+          value: "production"
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.frontend.livenessProbe.httpGet.path }}
+            port: {{ .Values.healthCheck.frontend.livenessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.healthCheck.frontend.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.frontend.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.frontend.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.frontend.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.frontend.readinessProbe.httpGet.path }}
+            port: {{ .Values.healthCheck.frontend.readinessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.healthCheck.frontend.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.frontend.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.frontend.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.frontend.readinessProbe.failureThreshold }}
+        resources:
+          limits:
+            cpu: {{ .Values.resources.frontend.limits.cpu }}
+            memory: {{ .Values.resources.frontend.limits.memory }}
+          requests:
+            cpu: {{ .Values.resources.frontend.requests.cpu }}
+            memory: {{ .Values.resources.frontend.requests.memory }}

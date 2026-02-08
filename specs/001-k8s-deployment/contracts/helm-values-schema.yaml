@@ -1,0 +1,225 @@
+# Helm Values Schema
+
+This file defines the structure and validation rules for the Helm chart values.yaml file.
+
+## Schema Definition
+
+```yaml
+# Image configuration
+image:
+  frontend:
+    repository: string (required)
+    tag: string (required, default: "latest")
+    pullPolicy: string (required, default: "IfNotPresent", enum: [Always, IfNotPresent, Never])
+  backend:
+    repository: string (required)
+    tag: string (required, default: "latest")
+    pullPolicy: string (required, default: "IfNotPresent", enum: [Always, IfNotPresent, Never])
+
+# Replica configuration
+replicaCount:
+  frontend: integer (required, min: 1, max: 10, default: 2)
+  backend: integer (required, min: 1, max: 10, default: 2)
+
+# Service configuration
+service:
+  frontend:
+    type: string (required, default: "NodePort", enum: [ClusterIP, NodePort, LoadBalancer])
+    port: integer (required, default: 80, min: 1, max: 65535)
+    targetPort: integer (required, default: 3000, min: 1, max: 65535)
+    nodePort: integer (optional, min: 30000, max: 32767)
+  backend:
+    type: string (required, default: "ClusterIP", enum: [ClusterIP, NodePort, LoadBalancer])
+    port: integer (required, default: 8000, min: 1, max: 65535)
+    targetPort: integer (required, default: 8000, min: 1, max: 65535)
+
+# Resource limits
+resources:
+  frontend:
+    requests:
+      cpu: string (required, default: "100m")
+      memory: string (required, default: "128Mi")
+    limits:
+      cpu: string (required, default: "500m")
+      memory: string (required, default: "512Mi")
+  backend:
+    requests:
+      cpu: string (required, default: "200m")
+      memory: string (required, default: "256Mi")
+    limits:
+      cpu: string (required, default: "1000m")
+      memory: string (required, default: "1Gi")
+
+# Health check configuration
+healthCheck:
+  frontend:
+    livenessProbe:
+      path: string (required, default: "/api/health")
+      initialDelaySeconds: integer (required, default: 10, min: 0)
+      periodSeconds: integer (required, default: 10, min: 1)
+      timeoutSeconds: integer (required, default: 5, min: 1)
+      failureThreshold: integer (required, default: 3, min: 1)
+    readinessProbe:
+      path: string (required, default: "/api/ready")
+      initialDelaySeconds: integer (required, default: 5, min: 0)
+      periodSeconds: integer (required, default: 5, min: 1)
+      timeoutSeconds: integer (required, default: 3, min: 1)
+      failureThreshold: integer (required, default: 3, min: 1)
+  backend:
+    livenessProbe:
+      path: string (required, default: "/health")
+      initialDelaySeconds: integer (required, default: 10, min: 0)
+      periodSeconds: integer (required, default: 10, min: 1)
+      timeoutSeconds: integer (required, default: 5, min: 1)
+      failureThreshold: integer (required, default: 3, min: 1)
+    readinessProbe:
+      path: string (required, default: "/ready")
+      initialDelaySeconds: integer (required, default: 5, min: 0)
+      periodSeconds: integer (required, default: 5, min: 1)
+      timeoutSeconds: integer (required, default: 3, min: 1)
+      failureThreshold: integer (required, default: 3, min: 1)
+
+# Environment configuration
+env:
+  frontend:
+    NEXT_PUBLIC_BACKEND_URL: string (required)
+    NODE_ENV: string (required, default: "production")
+    LOG_LEVEL: string (optional, default: "info")
+  backend:
+    DATABASE_URL: string (required, secret: true)
+    JWT_SECRET: string (required, secret: true)
+    BETTER_AUTH_SECRET: string (required, secret: true)
+    BETTER_AUTH_URL: string (required, secret: true)
+    PYTHON_ENV: string (required, default: "production")
+    LOG_LEVEL: string (optional, default: "info")
+
+# Update strategy
+updateStrategy:
+  type: string (required, default: "RollingUpdate", enum: [RollingUpdate, Recreate])
+  rollingUpdate:
+    maxSurge: integer (required, default: 1, min: 0)
+    maxUnavailable: integer (required, default: 0, min: 0)
+```
+
+## Example values.yaml
+
+```yaml
+image:
+  frontend:
+    repository: todo-chatbot-frontend
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  backend:
+    repository: todo-chatbot-backend
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+
+replicaCount:
+  frontend: 2
+  backend: 2
+
+service:
+  frontend:
+    type: NodePort
+    port: 80
+    targetPort: 3000
+  backend:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+
+resources:
+  frontend:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  backend:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+
+healthCheck:
+  frontend:
+    livenessProbe:
+      path: "/api/health"
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      path: "/api/ready"
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+  backend:
+    livenessProbe:
+      path: "/health"
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      path: "/ready"
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+
+env:
+  frontend:
+    NEXT_PUBLIC_BACKEND_URL: "http://todo-chatbot-backend:8000"
+    NODE_ENV: "production"
+    LOG_LEVEL: "info"
+  backend:
+    # Secrets - these should be provided via --set or separate values file
+    DATABASE_URL: ""  # Set via: --set env.backend.DATABASE_URL="postgresql://..."
+    JWT_SECRET: ""    # Set via: --set env.backend.JWT_SECRET="..."
+    BETTER_AUTH_SECRET: ""  # Set via: --set env.backend.BETTER_AUTH_SECRET="..."
+    BETTER_AUTH_URL: ""     # Set via: --set env.backend.BETTER_AUTH_URL="..."
+    PYTHON_ENV: "production"
+    LOG_LEVEL: "info"
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+```
+
+## Validation Rules
+
+1. **Image Tags**: Must be valid semantic version or "latest"
+2. **Replica Counts**: Must be between 1 and 10
+3. **Service Ports**: Must be valid port numbers (1-65535)
+4. **NodePort**: If specified, must be in range 30000-32767
+5. **Resource Requests**: Must be less than or equal to limits
+6. **Health Check Delays**: Must be non-negative integers
+7. **Environment Variables**: Required variables must be provided
+8. **Secrets**: Must not be committed to version control
+
+## Usage
+
+Install with default values:
+```bash
+helm install todo-chatbot ./helm/todo-chatbot
+```
+
+Install with custom values:
+```bash
+helm install todo-chatbot ./helm/todo-chatbot \
+  --set image.frontend.tag=0.2.0 \
+  --set replicaCount.backend=3 \
+  --set env.backend.DATABASE_URL="postgresql://..."
+```
+
+Install with values file:
+```bash
+helm install todo-chatbot ./helm/todo-chatbot -f custom-values.yaml
+```

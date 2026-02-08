@@ -1,0 +1,198 @@
+# Backend Deployment Contract
+
+This file defines the Kubernetes Deployment resource template for the backend service.
+
+## Resource Specification
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "todo-chatbot.fullname" . }}-backend
+  labels:
+    app: {{ include "todo-chatbot.name" . }}-backend
+    chart: {{ include "todo-chatbot.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount.backend }}
+  selector:
+    matchLabels:
+      app: {{ include "todo-chatbot.name" . }}-backend
+      release: {{ .Release.Name }}
+  strategy:
+    type: {{ .Values.updateStrategy.type }}
+    {{- if eq .Values.updateStrategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxSurge: {{ .Values.updateStrategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.updateStrategy.rollingUpdate.maxUnavailable }}
+    {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "todo-chatbot.name" . }}-backend
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: backend
+        image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+        imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.backend.targetPort }}
+          protocol: TCP
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-chatbot.fullname" . }}-secrets
+              key: DATABASE_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-chatbot.fullname" . }}-secrets
+              key: JWT_SECRET
+        - name: BETTER_AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-chatbot.fullname" . }}-secrets
+              key: BETTER_AUTH_SECRET
+        - name: BETTER_AUTH_URL
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "todo-chatbot.fullname" . }}-secrets
+              key: BETTER_AUTH_URL
+        - name: PYTHON_ENV
+          value: {{ .Values.env.backend.PYTHON_ENV | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.env.backend.LOG_LEVEL | quote }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.backend.livenessProbe.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.backend.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.backend.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.backend.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.backend.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.healthCheck.backend.readinessProbe.path }}
+            port: http
+          initialDelaySeconds: {{ .Values.healthCheck.backend.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.backend.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.healthCheck.backend.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.healthCheck.backend.readinessProbe.failureThreshold }}
+        resources:
+          requests:
+            cpu: {{ .Values.resources.backend.requests.cpu }}
+            memory: {{ .Values.resources.backend.requests.memory }}
+          limits:
+            cpu: {{ .Values.resources.backend.limits.cpu }}
+            memory: {{ .Values.resources.backend.limits.memory }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+```
+
+## Key Features
+
+### Replica Management
+- Configurable replica count via `replicaCount.backend`
+- Supports horizontal scaling
+- Label selector ensures pods are properly managed
+
+### Update Strategy
+- Supports RollingUpdate (default) and Recreate strategies
+- RollingUpdate ensures zero-downtime deployments
+- Configurable maxSurge and maxUnavailable
+
+### Container Configuration
+- Image pulled from configurable repository and tag
+- Exposes port 8000 (FastAPI default)
+- Environment variables from Secrets and direct values
+
+### Secrets Management
+- **DATABASE_URL**: Neon PostgreSQL connection string
+- **JWT_SECRET**: JWT token signing secret
+- **BETTER_AUTH_SECRET**: Better Auth secret key
+- **BETTER_AUTH_URL**: Better Auth URL
+- All sensitive data loaded from Kubernetes Secrets
+
+### Health Checks
+- **Liveness Probe**: HTTP GET to `/health` endpoint
+  - Checks if the FastAPI application is running
+  - Restarts container if failing
+- **Readiness Probe**: HTTP GET to `/ready` endpoint
+  - Checks if database connection is healthy
+  - Removes pod from service endpoints if failing
+
+### Resource Management
+- Higher CPU/memory allocation than frontend (backend is more resource-intensive)
+- CPU requests: 200m, limits: 1000m
+- Memory requests: 256Mi, limits: 1Gi
+- Configurable via values.yaml
+
+### Security
+- Runs as non-root user (UID 1000)
+- Privilege escalation disabled
+- Follows container security best practices
+- Secrets mounted as environment variables (not files)
+
+## Dependencies
+
+- Secret: `{{ include "todo-chatbot.fullname" . }}-secrets`
+- Service: `{{ include "todo-chatbot.fullname" . }}-backend`
+- External: Neon PostgreSQL database
+
+## Health Endpoint Requirements
+
+The backend application must implement these endpoints:
+
+### /health (Liveness)
+```python
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+```
+
+### /ready (Readiness)
+```python
+@app.get("/ready")
+async def ready():
+    # Check database connection
+    try:
+        # Perform a simple database query
+        db.execute("SELECT 1")
+        return {"status": "ready", "database": "connected"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail="Database not ready")
+```
+
+## Validation
+
+The deployment is valid when:
+1. All replicas reach Running state
+2. Health checks pass for all pods
+3. Pods are selected by the backend service
+4. Database connection is successful
+5. Environment variables (secrets) are properly injected
+
+## Troubleshooting
+
+Common issues:
+- **ImagePullBackOff**: Image not found in registry
+- **CrashLoopBackOff**: Container failing to start, check logs
+- **Pods not ready**: Database connection failing, verify DATABASE_URL
+- **Secret not found**: Ensure secrets are created before deployment
+- **Resource constraints**: Insufficient cluster resources
+- **Database connection timeout**: Check network connectivity to Neon PostgreSQL
+
+## Security Considerations
+
+1. **Secrets**: Never commit secrets to version control
+2. **Database URL**: Must include proper authentication credentials
+3. **JWT Secret**: Should be a strong random string (min 32 characters)
+4. **Network**: Backend service is ClusterIP (internal only)
+5. **User**: Container runs as non-root for security
